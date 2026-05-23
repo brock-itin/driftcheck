@@ -1,31 +1,43 @@
 package drift
 
-// Finding describes a single detected drift between a compose definition
-// and a running container.
+import "sort"
+
+// FindingType classifies what kind of drift was detected.
+type FindingType string
+
+const (
+	FindingTypeImage   FindingType = "image"
+	FindingTypeEnv     FindingType = "env"
+	FindingTypePorts   FindingType = "ports"
+	FindingTypeMissing FindingType = "missing"
+)
+
+// Finding represents a single detected drift between a running container
+// and its compose/helm definition.
 type Finding struct {
-	// Service is the compose service name associated with this finding.
-	Service string `json:"service"`
-	// Type categorises the drift (e.g. "image_drift", "env_drift").
-	Type string `json:"type"`
-	// Field is the specific field that differs (e.g. "image", "ENV_VAR").
-	Field string `json:"field"`
-	// Expected is the value declared in the compose definition.
-	Expected string `json:"expected"`
-	// Actual is the value observed in the running container.
-	Actual string `json:"actual"`
-	// Severity is the importance level assigned to this finding.
-	Severity Severity `json:"severity"`
+	Service  string
+	Type     FindingType
+	Expected string
+	Actual   string
+	Severity Severity
 }
 
-// IsZero reports whether the finding is empty / uninitialized.
+// IsZero returns true if the Finding is the zero value.
 func (f Finding) IsZero() bool {
-	return f.Service == "" && f.Type == "" && f.Field == ""
+	return f.Service == "" && f.Type == "" && f.Expected == "" && f.Actual == ""
 }
 
-// BySeverity implements sort.Interface for []Finding ordered by Severity
-// descending (highest first).
+// BySeverity implements sort.Interface for []Finding, ordering by
+// descending severity (Critical first).
 type BySeverity []Finding
 
-func (b BySeverity) Len() int           { return len(b) }
-func (b BySeverity) Less(i, j int) bool { return b[i].Severity > b[j].Severity }
-func (b BySeverity) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+func (b BySeverity) Len() int      { return len(b) }
+func (b BySeverity) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+func (b BySeverity) Less(i, j int) bool {
+	return b[i].Severity > b[j].Severity
+}
+
+// SortFindings sorts a slice of findings by descending severity in place.
+func SortFindings(findings []Finding) {
+	sort.Stable(BySeverity(findings))
+}
