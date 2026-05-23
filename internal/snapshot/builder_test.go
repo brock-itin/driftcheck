@@ -18,20 +18,22 @@ func (s *stubLister) ListContainers() ([]docker.ContainerInfo, error) {
 	return s.containers, s.err
 }
 
+// makeBuilder is a helper that constructs a Builder from a slice of ContainerInfo.
+func makeBuilder(containers []docker.ContainerInfo) *snapshot.Builder {
+	return snapshot.NewBuilder(&stubLister{containers: containers})
+}
+
 func TestBuild_PopulatesSnapshot(t *testing.T) {
-	lister := &stubLister{
-		containers: []docker.ContainerInfo{
-			{
-				ID:      "c1",
-				Name:    "web",
-				Image:   "nginx:1.25",
-				Env:     []string{"PORT=80", "DEBUG=false"},
-				Labels:  map[string]string{"app": "web"},
-				Running: true,
-			},
+	b := makeBuilder([]docker.ContainerInfo{
+		{
+			ID:      "c1",
+			Name:    "web",
+			Image:   "nginx:1.25",
+			Env:     []string{"PORT=80", "DEBUG=false"},
+			Labels:  map[string]string{"app": "web"},
+			Running: true,
 		},
-	}
-	b := snapshot.NewBuilder(lister)
+	})
 	snap, err := b.Build()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -49,8 +51,7 @@ func TestBuild_PopulatesSnapshot(t *testing.T) {
 }
 
 func TestBuild_EmptyContainers(t *testing.T) {
-	lister := &stubLister{containers: []docker.ContainerInfo{}}
-	b := snapshot.NewBuilder(lister)
+	b := makeBuilder([]docker.ContainerInfo{})
 	snap, err := b.Build()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -70,12 +71,9 @@ func TestBuild_ListerError(t *testing.T) {
 }
 
 func TestBuild_EnvWithoutValue(t *testing.T) {
-	lister := &stubLister{
-		containers: []docker.ContainerInfo{
-			{ID: "c2", Name: "worker", Image: "alpine", Env: []string{"FLAG"}, Running: true},
-		},
-	}
-	b := snapshot.NewBuilder(lister)
+	b := makeBuilder([]docker.ContainerInfo{
+		{ID: "c2", Name: "worker", Image: "alpine", Env: []string{"FLAG"}, Running: true},
+	})
 	snap, err := b.Build()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
