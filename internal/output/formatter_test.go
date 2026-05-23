@@ -60,6 +60,23 @@ func TestWriteJSON_WithFindings(t *testing.T) {
 	}
 }
 
+// TestWriteJSON_NoFindings verifies that JSON output for an empty report is
+// valid JSON and contains an empty (or null) findings list.
+func TestWriteJSON_NoFindings(t *testing.T) {
+	var buf bytes.Buffer
+	f := output.NewFormatter(&buf, output.FormatJSON)
+	if err := f.Write(makeReport(nil)); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var result drift.Report
+	if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	if len(result.Findings) != 0 {
+		t.Errorf("expected 0 findings, got %d", len(result.Findings))
+	}
+}
+
 func TestFormatDefault_IsText(t *testing.T) {
 	var buf bytes.Buffer
 	f := output.NewFormatter(&buf, "")
