@@ -1,12 +1,12 @@
-// Package output provides formatters for rendering drift reports
-// to various output formats such as plain text tables and JSON.
+// Package output provides formatting, rendering, and exit-code resolution
+// for driftcheck results.
 //
-// Usage:
+// Formatters support multiple output modes:
+//   - text: human-readable table-style output (default)
+//   - json: machine-readable JSON suitable for CI pipelines
 //
-//	f := output.NewFormatter(os.Stdout, output.FormatText)
-//	f.Write(report)
-//
-// Supported formats:
-//   - FormatText: human-readable tabular output
-//   - FormatJSON: machine-readable JSON suitable for CI pipelines
+// Exit codes follow UNIX conventions:
+//   - 0 (ExitOK):    no drift detected
+//   - 1 (ExitDrift): one or more drift findings detected
+//   - 2 (ExitError): a runtime or configuration error occurred
 package output
