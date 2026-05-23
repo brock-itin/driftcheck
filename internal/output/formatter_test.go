@@ -87,3 +87,33 @@ func TestFormatDefault_IsText(t *testing.T) {
 		t.Errorf("expected text fallback, got: %q", buf.String())
 	}
 }
+
+// TestWriteJSON_FindingFields verifies that JSON output preserves all fields
+// of a finding correctly, including Service, Field, Expected, and Actual.
+func TestWriteJSON_FindingFields(t *testing.T) {
+	findings := []drift.Finding{
+		{Service: "cache", Field: "replicas", Expected: "3", Actual: "1"},
+	}
+	var buf bytes.Buffer
+	f := output.NewFormatter(&buf, output.FormatJSON)
+	if err := f.Write(makeReport(findings)); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var result drift.Report
+	if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	got := result.Findings[0]
+	if got.Service != "cache" {
+		t.Errorf("expected Service %q, got %q", "cache", got.Service)
+	}
+	if got.Field != "replicas" {
+		t.Errorf("expected Field %q, got %q", "replicas", got.Field)
+	}
+	if got.Expected != "3" {
+		t.Errorf("expected Expected %q, got %q", "3", got.Expected)
+	}
+	if got.Actual != "1" {
+		t.Errorf("expected Actual %q, got %q", "1", got.Actual)
+	}
+}
