@@ -85,3 +85,9 @@ func BreachSummary(res ThresholdResult) string {
 	}
 	return fmt.Sprintf("[%s] %s", strings.ToUpper(string(res.Action)), strings.Join(res.Messages, "; "))
 }
+
+// IsFatal reports whether the threshold result should cause a hard failure.
+// Returns true only when the result is breached and the action is ThresholdFail.
+func IsFatal(res ThresholdResult) bool {
+	return res.Breached && res.Action == ThresholdFail
+}
