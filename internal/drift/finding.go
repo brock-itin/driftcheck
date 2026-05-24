@@ -27,6 +27,18 @@ func (f Finding) IsZero() bool {
 	return f.Service == "" && f.Type == "" && f.Expected == "" && f.Actual == ""
 }
 
+// FilterBySeverity returns a new slice containing only findings at or above
+// the given minimum severity level.
+func FilterBySeverity(findings []Finding, min Severity) []Finding {
+	result := make([]Finding, 0, len(findings))
+	for _, f := range findings {
+		if f.Severity >= min {
+			result = append(result, f)
+		}
+	}
+	return result
+}
+
 // BySeverity implements sort.Interface for []Finding, ordering by
 // descending severity (Critical first).
 type BySeverity []Finding
